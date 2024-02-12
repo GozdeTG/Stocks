@@ -1,0 +1,46 @@
+import os
+import pandas as pd
+import openai
+
+#openai.api_key = os.environ["OPENAI_API_KEY"]
+
+nasdaq100 = pd.read_csv("nasdaq100.csv")
+price_change = pd.read_csv("nasdaq100_price_change.csv")
+
+nasdaq100 = nasdaq100.merge(price_change[["symbol", "ytd"]], on="symbol", how="inner")
+
+
+nasdaq100.head()
+prompt = f'''Classify company {company} into one of the following sectors. Answer only with the sector name: Technology, Consumer Cyclical, Industrials, Utilities, Healthcare, Communication, Energy, Consumer Defensive, Real Estate, Financial.
+'''
+
+for company in nasdaq100["symbol"]:
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{ "role": "user", "content": prompt}],
+        temperature=0.0,
+    )
+    
+    sector = response['choices'][0]['message']['content']
+    
+    
+    nasdaq100.loc[nasdaq100["symbol"] == company, "Sector"] = sector
+    
+
+nasdaq100["Sector"].value_counts()
+
+
+prompt = f'''Provide summary information about Nasdaq-100 stock performance year to date (YTD), recommending the three best sectors               and three or more companies per sector.
+            Company data: {company_data} 
+'''
+
+
+response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{ "role": "user", "content": prompt}],
+        temperature=0.0,
+    )
+
+
+stock_recommendations = response['choices'][0]['message']['content']
+print(stock_recommendations)
