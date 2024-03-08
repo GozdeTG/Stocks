@@ -1,33 +1,26 @@
 #Plan-> 1.Read the ticker from excel 2. put into data frame  3. get the ex-date dividend from database 4. put into data frame 5. write into excel for dashboard
 
 
-import yfinance as yf
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from yahoo_fin import stock_info as si
 
+# Read tickers and stock names from CSV
+exdate = pd.read_csv("Input_Stock.csv", encoding="ISO-8859-1")
+ticker_list = exdate['Stock'].tolist()
+#other way to get the ticker 
+#ticker_list = ['BATS.L', 'HM-B.ST', 'ITX.MC', 'FLOW.AS', 'HEIA.AS', 'RIO', 'ROG.SW', 'ASML.AS', 'ASRNL.AS', 'NN.AS', 'ORA.PA', 'PAH3.DE', 'PHIA.AS', 'YAR.OL', 'TUI1.DE', 'TTE.PA', 'TEF.MC', 'SAN.PA', 'DIS', 'SIE.DE', 'SHL.DE', 'ENEL.MI', 'AD.AS', 'G.MI', 'BION.SW', 'JDEP.AS']
 
-exdate=pd.read_csv("ExDate.csv", encoding = "ISO-8859-1")
+stock_names = exdate['Stock Name'].tolist()
 
-exdate.Stock
+dfs = []
 
-historical_datas3 ={}
-i=0
-a=[]
-b=[]
-c=[]
-for ticker in exdate.Stock:
-    a.append(ticker)  #my_list.append('d')
-    b.append(si.get_quote_table(ticker)['Ex-Dividend Date'])
-    c.append(si.get_quote_table(ticker)['Forward Dividend & Yield'])
-    print(i)
-    i=i+1 # historical_datas[ticker] = si.get_quote_table(ticker)['Ex-Dividend Date']
+for ticker, stock_name in zip(ticker_list, stock_names):
+    quote_table = si.get_quote_table(ticker)
+    earnings_date = quote_table.get('Earnings Date', 'N/A')
+    ex_dividend_date = quote_table.get('Ex-Dividend Date', 'N/A')
+    data = {'Ticker': [ticker], 'Stock Name': [stock_name], 'Earnings Date': [earnings_date], 'Ex-Dividend Date': [ex_dividend_date]}
+    df = pd.DataFrame(data)
+    dfs.append(df)
 
-
-d=[a,b,c]
-d
-
-df2 = pd.DataFrame(d) #df = pd.DataFrame(historical_datas3, )  columns=['c', 'a', 'b']
-#columns=['c', 'a'])
-df2.to_csv(("exdatesonuclari2.csv"))
+result_df = pd.concat(dfs, ignore_index=True)
+result_df.to_csv("stock_data.csv", index=False)
